@@ -24,7 +24,13 @@ async function fetchSlackChannelContent(channelId) {
         channel: channelId,
         token: slackToken
     });
-    const messages = response.messages.reverse().map((message) => `user ${message.user} posted the following: ${message.text}, it has ${message.reply_count? message.reply_count: 0} replies`)
+    console.log(response.messages[1].reactions)
+    let count = 0
+    const messages = response.messages.reverse().map((message) => {
+        let reactionCount = 0
+        if (message.reactions) message.reactions.map(reaction => reactionCount = reactionCount + reaction.count)
+        return `user ${message.user} posted the following: ${message.text}, 
+        it has ${message.reply_count? message.reply_count: 0} replies, and ${reactionCount} reactions`})
     return messages.join('\n') // combine into a string for chatGpt
   } catch (error) {
         if (error.data && error.data.response_metadata) {
@@ -48,7 +54,8 @@ async function summarizeText(text) {
                 *When a user posted several times on a row, say it in the same sentence, mentioning that user only once, 
                 don't forget to check the username.
                 *Each post specifies the amount of replies it has, if its greater than 0 you should mention it.
-                *If the text has more than 100 lines, only include the posts that have more replies.
+                *Each post specifies the amount of reactions, mention the amount of reactions of the post if its greater than 0.
+          
                 The text is the following:
                 ${text}` },
        
